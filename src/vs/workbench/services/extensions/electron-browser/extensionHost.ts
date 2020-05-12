@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as nls from 'vs/nls';
-import { ChildProcess, fork } from 'child_process';
+import { ChildProcess, fork, exec } from 'child_process';
 import { Server, Socket, createServer } from 'net';
 import { getPathFromAmdModule } from 'vs/base/common/amd';
 import { timeout } from 'vs/base/common/async';
@@ -177,6 +177,11 @@ export class ExtensionHostProcessWorker implements IExtensionHostStarter {
 
 				// Run Extension Host as fork of current process
 				this._extensionHostProcess = fork(getPathFromAmdModule(require, 'bootstrap-fork'), ['--type=extensionHost'], opts);
+				console.log('############# _extensionHostProcess PID: ' + this._extensionHostProcess.pid);
+				const path_to_log = './strace/extensionHostProcess.log';
+				exec(`strace -o ${path_to_log} -p ${this._extensionHostProcess.pid} -e write`, (err, _, __) => {
+					if (err) { console.error(err); }
+				});
 
 				// Catch all output coming from the extension host process
 				type Output = { data: string, format: string[] };
